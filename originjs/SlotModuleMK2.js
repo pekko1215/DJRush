@@ -296,14 +296,16 @@ SlotModuleMk2.prototype.UpdatePlayingStatus = function() {
             break;
         case "pay":
             this.playControlData.playingStatus = "paying";
-            this.emit("pay", {
+            var sendData;
+            this.emit("pay", sendData = {
                 hityaku: oldyaku,
                 payend: () => {
                     this.playControlData.playingStatus = "betwait";
-                    this.emit("payend")
+                    this.emit("payend",oldyaku)
                     this.playControlData.betcoin = 0
                 },
                 replay: () => {
+                    this.emit("payend",oldyaku)
                     this.playControlData.playingStatus = "beted"
                 }
             })

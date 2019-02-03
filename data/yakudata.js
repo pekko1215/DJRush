@@ -1,6 +1,40 @@
 /**
  * Created by pekko1215 on 2017/07/15.
  */
+
+var dummnyLines = {
+    "中段":[
+        [0,0,0],
+        [1,1,1],
+        [0,0,0]
+    ],
+    "上段":[
+        [1,1,1],
+        [0,0,0],
+        [0,0,0]
+    ],
+    "下段":[
+        [0,0,0],
+        [0,0,0],
+        [1,1,1]
+    ],
+    "右下がり":[
+        [1,0,0],
+        [0,1,0],
+        [0,0,1]
+    ],
+    "右上がり":[
+        [0,0,1],
+        [0,1,0],
+        [1,0,0]
+    ],
+    "なし":[
+        [0,0,0],
+        [0,0,0],
+        [0,0,0]
+    ]
+}
+
 var YakuData = [
     {
         name: "はずれ",
@@ -8,132 +42,123 @@ var YakuData = [
     },
     {
         name: "リプレイ",
-        pay: [0, 0, 0]
-    },
-    {
-        name: "ベル",
-        pay: [6, 0, 6]
-    },
-    {
-        name: "スイカ",
-        pay: [3, 0, 0]
-    },
-    {
-        name: "チェリー",
-        pay: [0, 0, 0]
-    },
-    {
-        name: "チェリー",
-        pay: [0, 0, 0]
-    },
-    {
-        name: "チェリー",
-        pay: [0, 0, 0]
-    },
-    {
-        name: "チェリー",
-        pay: [0, 0, 0]
-    },
-    {
-        name: "チェリー",
-        pay: [0, 0, 0]
-    },
-    {
-        name: "スイカ",
-        pay: [3, 0, 0]
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["右下がり"]
     },
     {
         name: "リプレイ",
-        pay: [0, 0, 0]
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["右下がり"]
+    },
+    {
+        name: "リプレイ",
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["上段"]
+    },
+    {
+        name: "リプレイ",
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["上段"]
     },
     {
         name: "ベル",
-        pay: [6, 0, 6]
-    },
-    {
-        name: "7",
-        pay: [0, 0, 0]
-    },
-    {
-        name: "月",
-        pay: [0, 0, 0]
-    },
-    {
-        name: "BAR",
-        pay: [0, 0, 0]
-    },
-    {
-        name: "スイカ",
-        pay: [3, 0, 0]
-    },
-    {
-        name: "スイカ",
-        pay: [3, 0, 0]
+        pay: [15, 15, 15],
+        flashLine:dummnyLines["下段"]
     },
     {
         name: "ベル",
-        pay: [6, 0, 6]
+        pay: [15, 15, 15],
+        flashLine:dummnyLines["下段"]
     },
     {
-        name: "1枚役",
-        pay: [1, 0, 0]
+        name: "ベル",
+        pay: [15, 15, 15],
+        flashLine:dummnyLines["右上がり"]
     },
     {
-        name: "1枚役",
-        pay: [1, 0, 0]
-    },
-    {
-        name: "重複リプレイ",
-        pay: [0, 0, 0]
+        name: "ベル",
+        pay: [15, 15, 15],
+        flashLine:dummnyLines["右上がり"]
     },
     {
         name: "チェリー",
+        pay: [15, 15, 15],
+        flashLine:[[0,0,0],[0,0,0],[1,0,0]]
+    },
+    {
+        name: "チャンス目",
+        pay: [1, 1, 1],
+        flashLine:dummnyLines["右上がり"]
+    },
+    {
+        name: "チャンス目",
+        pay: [1, 1, 1],
+        flashLine:dummnyLines["下段"]
+    },
+    {
+        name: "REG1",
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["なし"]
+    },
+    {
+        name: "REG1",
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["なし"]
+    },
+    {
+        name: "DJリプレイ",
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["右下がり"]
+    },
+    {
+        name: "DJリプレイ",
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["右下がり"]
+    },
+    {
+        name: "DJリプレイ",
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["上段"]
+    },
+    {
+        name: "DJリプレイ",
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["上段"]
+    },
+    {
+        name: "DJリプレイ",
         pay: [0, 0, 0]
     },
     {
-        name: "JAC中15枚",
-        pay: [0, 0, 15]
+        name: "BIG1",
+        pay: [0, 0, 0]
     },
     {
-        name: "JAC中15枚",
-        pay: [0, 0, 15]
-    },
-    {
-        name: "JAC中15枚",
-        pay: [0, 0, 15]
-    },
-    {
-        name: "BIG中3枚",
-        pay: [0, 2, 0]
-    },
-    {
-        name: "BIG中3枚",
-        pay: [0, 2, 0]
-    },
-    {
-        name: "BIG中3枚",
-        pay: [0, 2, 0]
+        name: "BIG2",
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["なし"]
     },
     {
         name: "JACIN",
         pay: [0, 0, 0]
     },
     {
-        name: "JACIN",
+        name: "JACGAME",
+        pay: [15, 15, 15],
+        flashLine:dummnyLines["右下がり"]
+    },
+    {
+        name: "REG2",
         pay: [0, 0, 0]
     },
     {
-        name: "ベル",
-        pay: [0, 0, 6]
+        name: "DJリプレイ",
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["下段"]
     },
     {
-        name: "ダミー",
+        name: "DJリプレイ",
         pay: [0, 0, 0],
-        dummy:true
-    },
-    {
-        name: "ダミー",
-        pay: [0, 0, 0],
-        dummy:true
+        flashLine:dummnyLines["右上がり"]
     },
 ]
