@@ -57,6 +57,7 @@ function main() {
                         case "BIG1":
                             bonusFlag = null;
                             setGamemode('BIG1');
+                            sounder.playSound("big1",true,()=>{},14.276);
                             bonusData = new BonusData.BigBonus5("BIG1",310);
                             break
                         case "BIG2":
@@ -129,6 +130,7 @@ function main() {
             setGamemode(bonusData.getGameMode());
             if(bonusData.isEnd == true){
                 bonusData = null;
+                sounder.stopSound("bgm");
             }
             changeBonusSeg();
         }
@@ -164,27 +166,8 @@ function main() {
         var arg = arguments;
         if (!("paycount" in e)) {
             e.paycount = 0
-            switch (gameMode) {
-                case 'BIG2':
-                case 'REG1':
-                case 'REG2':
-                case 'normal':
-                    if(pays >= 2){
-                        sounder.playSound(loopPaySound = 'pay',true);
-                    }
-                    break;
-                case 'jac':
-                    switch (pays) {
-                        case 2:
-                        case 3:
-                        case 6:
-                            sounder.playSound("cherrypay");
-                            break;
-                        case 15:
-                            sounder.playSound("pay15");
-                            break;
-                    }
-                    break;
+            if(pays >= 2){
+                sounder.playSound(loopPaySound = 'pay',true);
             }
         }
         if (pays == 0) {
@@ -476,7 +459,7 @@ function main() {
     sounder.addFile("sound/bell2.wav", "bell2").addTag("se");
     sounder.addFile("sound/nabi.wav", "nabi").addTag("voice").addTag("se");
     sounder.addFile("sound/reg.wav", "reg").addTag("bgm");
-    sounder.addFile("sound/big2.mp3", "big2").addTag("bgm").setVolume(0.2);
+    sounder.addFile("sound/big1.mp3", "big1").addTag("bgm").setVolume(0.2);
     sounder.addFile("sound/moonstart.mp3", "moonstart").addTag("se").setVolume(0.2);
     sounder.addFile("sound/bigselect.mp3", "bigselect").addTag("se")
     sounder.addFile("sound/syoto.mp3", "syoto").addTag("se")
