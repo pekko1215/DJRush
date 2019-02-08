@@ -8,6 +8,8 @@ var lotdata = {
             value:1/7.7},
         {   name:"ベル",
             value:1/19.3},
+        {   name:"JACIN",
+            value:1/99.6},
         {   name:"チェリー",
             value:1/99.6},
         {   name:"チャンス目1",

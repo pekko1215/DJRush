@@ -93,7 +93,7 @@ var YakuData = [
     {
         name: "チャンス目",
         pay: [1, 1, 1],
-        flashLine:dummnyLines["下段"]
+        flashLine:[[0,0,1],[1,1,0],[0,0,0]]
     },
     {
         name: "REG1",
@@ -149,16 +149,44 @@ var YakuData = [
     },
     {
         name: "REG2",
-        pay: [0, 0, 0]
+        pay: [0, 0, 0],
+        flashLine:dummnyLines["右上がり"]
     },
     {
-        name: "DJリプレイ",
+        name: "REG2",
         pay: [0, 0, 0],
         flashLine:dummnyLines["下段"]
     },
     {
-        name: "DJリプレイ",
-        pay: [0, 0, 0],
-        flashLine:dummnyLines["右上がり"]
+        name:"JACIN2",
+        pay:[0 , 0, 0],
     },
+    {
+        name:"JACIN2",
+        pay:[0 , 0, 0],
+    },
+    {
+        name:"JACIN2",
+        pay:[0 , 0, 0],
+    },
+    {
+        name:"JACIN2",
+        pay:[0 , 0, 0],
+    },
+    {
+        name:"REG1",
+        pay:[0 , 0, 0],
+    },
+    {
+        name:"REG1",
+        pay:[0 , 0, 0],
+    },
+    {
+        name:"REG1",
+        pay:[0 , 0, 0],
+    },
+    {
+        name:"REG1",
+        pay:[0 , 0, 0],
+    }
 ]

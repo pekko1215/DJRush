@@ -20,15 +20,27 @@ function main() {
             slotmodule.once("bet", function() {
                 slotmodule.clearFlashReservation()
             })
-            if (e.hityaku[0].name.indexOf("Dummy") != -1 || e.hityaku[0].name.indexOf("1枚役") != -1 || e.hityaku[0].name == "チェリー") {
-                notplaypaysound = true;
+            notplaypaysound = false;
+            if (e.hityaku[0].name === "JACIN") {
+                slotmodule.setFlash(replaceMatrix(flashdata.syoto, matrix, colordata.LINE_F, null), 1000, function() {
+                    slotmodule.clearFlashReservation()
+                });
             } else {
-                notplaypaysound = false;
-                if (e.hityaku[0].name === "JACIN") {
-                    slotmodule.setFlash(replaceMatrix(flashdata.syoto, matrix, colordata.LINE_F, null), 1000, function() {
-                        slotmodule.clearFlashReservation()
-                    });
-                } else {
+                if(/チャンス目/.test(e.hityaku[0].name)||
+                    /JACIN/.test(e.hityaku[0].name) || 
+                    /REG/.test(e.hityaku[0].name)){
+                    var count = 20;
+                    slotmodule.freeze();
+                    slotmodule.setFlash(null, 0, function(e) {
+                        slotmodule.setFlash(flashdata.default, 1)
+                        var mat = [[rand(2),rand(2),rand(2)],[rand(2),rand(2),rand(2)],[rand(2),rand(2),rand(2)]];
+                        if(count--){
+                            slotmodule.setFlash(replaceMatrix(flashdata.default, mat, colordata.LINE_F, null), 1, arguments.callee)
+                        }else{
+                            slotmodule.resume();
+                        }
+                    })
+                }else{
                     slotmodule.setFlash(null, 0, function(e) {
                         slotmodule.setFlash(flashdata.default, 20)
                         slotmodule.setFlash(replaceMatrix(flashdata.default, matrix, colordata.LINE_F, null), 20, arguments.callee)
@@ -36,15 +48,8 @@ function main() {
                 }
             }
         }
-        if (e.hits == 0 && jacFlag && gameMode == "big") {
-            slotmodule.setFlash(flashdata.syoto)
-            slotmodule.once('bet', function() {
-                slotmodule.clearFlashReservation()
-            })
-        }
         replayFlag = false;
         var nexter = true;
-
         var changeBonusFlag = false;
         e.hityaku.forEach(function(d) {
             var matrix = d.matrix;
@@ -108,6 +113,9 @@ function main() {
                 case 'REG2':
                     switch(d.name){
                         case 'DJリプレイ':
+                            replayFlag = true;
+                            break
+                        case 'リプレイ':
                             replayFlag = true;
                             break
                     }
@@ -222,6 +230,9 @@ function main() {
                     case "チェリー":
                         ret = "チェリー";
                         break;
+                    case "JACIN":
+                        ret = "JACIN2";
+                        break
                     case "チャンス目1":
                         ret = "チャンス目1";
                     break
@@ -234,14 +245,16 @@ function main() {
                             case 7:
                             case 6:
                             case 5:
-                                ret = "チャンス目2"
-                                break
                             case 4:
+                                ret = "REG1";
+                                break
                             case 3:
                             case 2:
-                                ret = "チャンス目1"
+                                ret = "チャンス目2"
                                 break
                             case 1:
+                                ret = "チャンス目1"
+                                break
                             case 0:
                                 ret = "チェリー"
                                 break
@@ -253,14 +266,16 @@ function main() {
                             case 7:
                             case 6:
                             case 5:
-                                ret = "チャンス目2"
-                                break
                             case 4:
+                                ret = "REG1";
+                                break
                             case 3:
                             case 2:
-                                ret = "チャンス目1"
+                                ret = "チャンス目2"
                                 break
                             case 1:
+                                ret = "チャンス目1"
+                                break
                             case 0:
                                 ret = "チェリー"
                                 break
@@ -326,7 +341,7 @@ function main() {
                 }
                 break
             case "REG2":
-                ret = "DJリプレイ"+(1+rand(3));
+                ret = "リプレイ"
                 break
             case "JAC":
                 ret = "JACGAME"
@@ -373,10 +388,7 @@ function main() {
                             break
                         }
                     }else{
-                        if(bonusFlag != null && !rand(4)){
-                            ret = bonusFlag;
-                        }
-                        if(bonusFlag == null && !rand(12)){
+                        if(bonusFlag == null && !rand(32)){
                             bonusFlag = 'BIG1'
                         }
                     }
