@@ -9,7 +9,7 @@ const BonusData = {
 		jacIn(name,gameCount,payCount){
 			this.jacName = name;
 			this.gameCount = gameCount + 1;
-			this.payCount = payCount + 1;
+			this.payCount = payCount;
 			this.isJacin = true;
 		}
 		getGameMode(){

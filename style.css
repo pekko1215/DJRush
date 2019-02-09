@@ -70,31 +70,63 @@ th {
     border: solid 1px;
 }
 
-#moon {
+#disk {
     position: absolute;
     left: 789px;
-    top: 3px;
+    top: -16px;
 }
 
-#fire {
+#geki {
     position: absolute;
     left: 359px;
     top: 327px;
-    filter: brightness(20%);
+    width:130px;
 }
 
-#nabi1{
-    position: absolute;
-    left: 796px;
-    top: 133px;
+.lamp {
+    filter: brightness(20%);
+    transition: filter 0.2s;
 }
-#nabi2{
-    position: absolute;
-    left: 796px;
-    top: 191px;
+
+.lamp.show {
+    filter: brightness(100%);
 }
-#nabi3{
+
+#itigeki {
     position: absolute;
-    left: 796px;
-    top: 248px;
+    top: 100px;
+    width: 122px;
+}
+
+#renda {
+    position: absolute;
+    top: 200px;
+    width: 122px;
+}
+
+.colorBar {
+    width:17px;
+    height:51px;
+    position:absolute;
+}
+
+#level1{
+    background-color:blue;
+    top: 252px;
+    left: 784px;
+}
+#level2{
+    background-color:yellow;
+    top: 199px;
+    left: 784px;
+}
+#level3{
+    background-color:green;
+    top: 145px;
+    left: 784px;
+}
+#level4{
+    background-color:red;
+    top: 91px;
+    left: 784px;
 }

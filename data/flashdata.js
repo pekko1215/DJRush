@@ -19,12 +19,12 @@ var colordata = {
         alpha:0.5
     },
     SYOTO_B:{
-        color:0x444444,
+        color:0x0,
         alpha:0.5
     },
     SYOTO_F:{
-        color:0x666666,
-        alpha:0.5
+        color:0x1c1c1c,
+        alpha:0.9
     }
 }
 

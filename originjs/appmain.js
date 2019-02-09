@@ -15,37 +15,49 @@ function main() {
         if (e.hits != 0) {
             if (e.hityaku.length == 0) return
             var matrix = e.hityaku[0].flashLine || e.hityaku[0].matrix;
-            console.log(e)
             var count = 0;
+            var {name} = e.hityaku[0];
             slotmodule.once("bet", function() {
                 slotmodule.clearFlashReservation()
             })
             notplaypaysound = false;
-            if (e.hityaku[0].name === "JACIN") {
-                slotmodule.setFlash(replaceMatrix(flashdata.syoto, matrix, colordata.LINE_F, null), 1000, function() {
-                    slotmodule.clearFlashReservation()
-                });
-            } else {
-                if(/チャンス目/.test(e.hityaku[0].name)||
-                    /JACIN/.test(e.hityaku[0].name) || 
-                    /REG/.test(e.hityaku[0].name)){
-                    var count = 20;
+            switch(name){
+                case 'JACIN':
+                    slotmodule.setFlash(
+                        replaceMatrix(
+                            flashdata.syoto,
+                            matrix,
+                            colordata.LINE_F,
+                            null
+                        ), 1000, function() {
+                        slotmodule.clearFlashReservation()
+                    });
+                break
+                case 'チャンス目':
+                    var count = 10;
                     slotmodule.freeze();
                     slotmodule.setFlash(null, 0, function(e) {
                         slotmodule.setFlash(flashdata.default, 1)
                         var mat = [[rand(2),rand(2),rand(2)],[rand(2),rand(2),rand(2)],[rand(2),rand(2),rand(2)]];
                         if(count--){
-                            slotmodule.setFlash(replaceMatrix(flashdata.default, mat, colordata.LINE_F, null), 1, arguments.callee)
+                            slotmodule.setFlash(replaceMatrix(flashdata.default, mat, colordata.LINE_F, null), 2, arguments.callee)
                         }else{
                             slotmodule.resume();
                         }
                     })
-                }else{
+                    break
+                case 'JACIN2':
+                case 'REG1':
+                case 'JACIN':
+                    slotmodule.setFlash(replaceMatrix(flashdata.syoto, matrix, colordata.LINE_F, null), 1000, function() {
+                        slotmodule.clearFlashReservation()
+                    });
+                    break
+                default:
                     slotmodule.setFlash(null, 0, function(e) {
                         slotmodule.setFlash(flashdata.default, 20)
                         slotmodule.setFlash(replaceMatrix(flashdata.default, matrix, colordata.LINE_F, null), 20, arguments.callee)
                     })
-                }
             }
         }
         replayFlag = false;
@@ -56,24 +68,33 @@ function main() {
             switch (gameMode) {
                 case 'normal':
                     switch (d.name) {
-                        case "リプレイ":
+                        case 'リプレイ':
                             replayFlag = true;
-                            break;
+                            break
                         case "BIG1":
                             bonusFlag = null;
                             setGamemode('BIG1');
                             sounder.playSound("big1",true,()=>{},14.276);
                             bonusData = new BonusData.BigBonus5("BIG1",310);
+                            isEffected = false;
+                            $('#disk').removeClass('show');
+                            voltageReset();
                             break
                         case "BIG2":
                             setGamemode('BIG2');
                             bonusData = new BonusData.BigBonus5("BIG2",300);
                             bonusFlag = null;
+                            isEffected = false;
+                            $('#disk').removeClass('show');
+                            voltageReset();
                             break
                         case 'REG1': //CZに移行
                             setGamemode('REG1');
                             bonusData = new BonusData.RegularBonus5("REG1",1,1);
                             bonusFlag = null;
+                            isEffected = false;
+                            $('#disk').removeClass('show');
+                            voltageReset();
                     }
                     break;
                 case 'BIG1': //出玉ありボーナス
@@ -90,14 +111,17 @@ function main() {
                             setGamemode('REG2');
                             bonusData = new BonusData.RegularBonus5("REG2",1,1);
                             bonusFlag = null;
+                            sounder.playSound('hitchance')
                     }
                     break;
                 case 'BIG2': //見た目通常
+                case 'JAC2':
                     switch(d.name){
                         case "リプレイ":
                             replayFlag = true;
                             break;
                         case "REG1":
+                            sounder.playSound('chance');
                             setGamemode('REG1');
                             bonusData = new BonusData.RegularBonus5('REG1',1,1);
                             bonusFlag = null;
@@ -106,7 +130,14 @@ function main() {
                             setGamemode('REG2');
                             bonusData = new BonusData.RegularBonus5('REG2',1,1);
                             bonusFlag = null;
+                            sounder.playSound('chance');
+                            sounder.playSound('hitchance')
                             break
+                        case 'JACIN2':
+                            setGamemode('JAC2');
+                            bonusData.jacIn('JAC2',12,1);
+                            bonusFlag = null;
+                            sounder.playSound('chance');
                     }
                 break
                 case 'REG1':
@@ -114,6 +145,14 @@ function main() {
                     switch(d.name){
                         case 'DJリプレイ':
                             replayFlag = true;
+                            notplaypaysound = true;
+                            (async ()=>{
+                                slotmodule.freeze();
+                                await sounder.playSound('hitchance')
+                                await delay(500);
+                                slotmodule.resume();
+                                sounder.playSound('chancezone',true);
+                            })();
                             break
                         case 'リプレイ':
                             replayFlag = true;
@@ -136,9 +175,9 @@ function main() {
             bonusData.onNextGame(e.pay)
             console.log(bonusData,e.pay,bonusData.getGameMode())
             setGamemode(bonusData.getGameMode());
-            if(bonusData.isEnd == true){
-                bonusData = null;
+            if(bonusData.isEnd == true && bonusData.name == 'BIG1'){
                 sounder.stopSound("bgm");
+                bonusData = null;
             }
             changeBonusSeg();
         }
@@ -168,48 +207,40 @@ function main() {
             segments.payseg.reset();
         }
     })
-    var loopPaySound = null;
-    slotmodule.on("pay", function(e) {
+    slotmodule.on("pay", async (e)=>{
         var pays = e.hityaku.pay;
-        var arg = arguments;
-        if (!("paycount" in e)) {
-            e.paycount = 0
-            if(pays >= 2){
-                sounder.playSound(loopPaySound = 'pay',true);
+        var loopPaySound = null;
+        var payCount = 0;
+        if(pays >= 2 && !notplaypaysound) sounder.playSound(loopPaySound = 'pay',true);
+        if (replayFlag) {
+            if(!notplaypaysound){
+                await sounder.playSound('replay');
             }
+            e.replay();
+            slotmodule.emit("bet", e.playingStatus);
+            return
         }
-        if (pays == 0) {
-            if (replayFlag && replayFlag && e.hityaku.hityaku[0].name != "チェリー") {
-                sounder.playSound("replay", false, function() {
-                    e.replay();
-                    slotmodule.emit("bet", e.playingStatus);
-                });
-            } else {
-                if (replayFlag) {
-                    e.replay();
-                    slotmodule.clearFlashReservation()
-                } else {
-                    e.payend()
-                    if(loopPaySound){
-                        sounder.stopSound(loopPaySound);
-                        loopPaySound = null;
-                    }
-                }
-            }
-        } else {
-            e.hityaku.pay--;
+        while(pays--){
             coin++;
-            e.paycount++;
+            payCount++;
             outcoin++;
             if(bonusData != null){
                 bonusData.onPay(1);
                 changeBonusSeg();
             }
             changeCredit(1);
-            segments.payseg.setSegments(e.paycount)
-            setTimeout(function() {
-                arg.callee(e)
-            }, 50)
+            segments.payseg.setSegments(payCount)
+            await delay(50);
+        }
+        if (replayFlag) {
+            e.replay();
+            slotmodule.clearFlashReservation()
+        } else {
+            e.payend()
+            if(loopPaySound){
+                sounder.stopSound(loopPaySound);
+                loopPaySound = null;
+            }
         }
     })
     var jacFlag = false;
@@ -231,7 +262,11 @@ function main() {
                         ret = "チェリー";
                         break;
                     case "JACIN":
-                        ret = "JACIN2";
+                        if(bonusFlag){
+                            ret = bonusFlag;
+                            break
+                        }
+                        ret = bonusFlag = "JACIN2";
                         break
                     case "チャンス目1":
                         ret = "チャンス目1";
@@ -240,6 +275,10 @@ function main() {
                         ret = "チャンス目2";
                     break
                     case "REG1":
+                        if(bonusFlag){
+                            ret = bonusFlag;
+                            break
+                        }
                         ret = bonusFlag = "REG1"
                         switch(rand(8)){
                             case 7:
@@ -261,6 +300,10 @@ function main() {
                         }
                         break;
                     case "REG2":
+                        if(bonusFlag){
+                            ret = bonusFlag;
+                            break
+                        }
                         ret = bonusFlag = "REG2"
                         switch(rand(8)){
                             case 7:
@@ -283,7 +326,7 @@ function main() {
                         break;
                     default:
                         ret = "はずれ"
-                        if (bonusFlag != "none") {
+                        if (bonusFlag) {
                             ret = bonusFlag
                             switch(bonusFlag){
                                 case 'REG1':
@@ -296,9 +339,11 @@ function main() {
                         }
                 }
                 break;
+            case 'JAC2':
+                ret = "JACGAME2"
+                break;
             case "BIG1":
                 if(bonusFlag != null){
-                    console.log("Flag:"+bonusFlag)
                     ret = "リプレイ"
                     if(!rand(4)){
                         ret = bonusFlag;
@@ -321,23 +366,7 @@ function main() {
             case "REG1":
                 ret = "DJリプレイ"+(1+rand(3))
                 if(!rand(8)){
-                    switch(rand(8)){
-                        case 0:
-                            ret = "チャンス目1";
-                        break
-                        case 1:
-                        case 2:
-                            ret = "チャンス目2";
-                        break
-                        case 3:
-                        case 4:
-                            ret = "チェリー"
-                        case 5:
-                        case 6:
-                        case 7:
-                            ret = "ベル"
-                        break
-                    }
+                    ret = "ベル"
                 }
                 break
             case "REG2":
@@ -358,37 +387,10 @@ function main() {
                 case 2:
                     ret = "リプレイ";
                     if(!rand(8)){
-                        switch(rand(8)){
-                            case 0:
-                                ret = "チャンス目1";
-                                if(!bonusFlag){
-                                    bonusFlag = !rand(20) ? "BIG2" : "BIG1";
-                                }
-                            break
-                            case 1:
-                            case 2:
-                                ret = "チャンス目2";
-                                if(!bonusFlag){
-                                    bonusFlag = !rand(5) ? "BIG2" : "BIG1";
-                                }
-                            break
-                            case 3:
-                            case 4:
-                                ret = "チェリー"
-                                if(!bonusFlag){
-                                    bonusFlag = rand(3) ? "BIG2" : "BIG1";
-                                }
-                            case 5:
-                            case 6:
-                            case 7:
-                                ret = "ベル"
-                                if(!bonusFlag){
-                                    bonusFlag = rand(8) ? "BIG1" : "BIG2";
-                                }
-                            break
-                        }
+                        ret = 'ベル';
+                        bonusFlag = bonusFlag || 'BIG2';
                     }else{
-                        if(bonusFlag == null && !rand(32)){
+                        if(bonusFlag == null && !rand(12)){
                             bonusFlag = 'BIG1'
                         }
                     }
@@ -478,14 +480,25 @@ function main() {
     sounder.addFile("sound/cherrypay.wav", "cherrypay").addTag("se");
     sounder.addFile("sound/bonuspay.wav", "bonuspay").addTag("voice").addTag("se");
     sounder.addFile("sound/bpay.wav", "bpay").addTag("se").setVolume(0.5);
+    sounder.addFile("sound/chance.mp3", "chance").addTag("se").setVolume(0.5);
+    sounder.addFile("sound/hitchance.mp3", "hitchance").addTag("se").setVolume(0.5);
+    sounder.addFile("sound/fan1.mp3", "fan1").addTag("se").setVolume(0.5);
+    sounder.addFile("sound/fan2.mp3", "fan2").addTag("se").setVolume(0.5);
+    sounder.addFile("sound/chancezone.mp3", "chancezone").addTag("bgm").setVolume(0.2);
+    sounder.addFile("sound/chancezoneend.mp3", "chancezoneend").addTag("se")
+    sounder.addFile("sound/voltageup.mp3", "voltageup").addTag("se")
+    sounder.addFile("sound/leverstart.mp3", "leverstart").addTag("se")
+    sounder.addFile("sound/leverpush.mp3", "leverpush").addTag("se")
+    sounder.addFile("sound/win.mp3", "win").addTag("se")
+    sounder.addFile("sound/lose.mp3", "lose").addTag("se")
+    sounder.addFile("sound/geki.mp3", "geki").addTag("se")
+    sounder.addFile("sound/title.mp3", "title").addTag("se")
+    sounder.addFile("sound/type.mp3", "type").addTag("se")
     // sounder.setVolume("se", 0.2)
     // sounder.setVolume("bgm", 0.2)
-    $(window).click(function sounderEvent(){
-        if(window.sounder){return}
-        sounder.loadFile(function() {
-            window.sounder = sounder
-            console.log(sounder)
-        })
+    sounder.loadFile(function() {
+        window.sounder = sounder
+        console.log(sounder)
     })
     var normalLotter = new Lotter(lotdata.normal);
     var bigLotter = new Lotter(lotdata.big);
@@ -626,6 +639,10 @@ function main() {
                 slotmodule.setLotMode(2)
                 slotmodule.setMaxbet(1);
                 break
+            case 'JAC2':
+                gameMode = 'JAC2';
+                slotmodule.setLotMode(0)
+                slotmodule.setMaxbet(2);
         }
     }
     var segments = {
@@ -657,6 +674,7 @@ function main() {
 
     function changeBonusSeg() {
         if(!this.bonusData) return segments.effectseg.setSegments("");
+        if(this.bonusData instanceof BonusData.RegularBonus5) return;
         segments.effectseg.setSegments(bonusData.getBonusSeg());
     }
 
@@ -710,177 +728,181 @@ function main() {
         })
     }
 
-    function effect(lot) {
+    const VoltageMap = {
+        CZ:{
+            low:[
+                [50,49,1 ,0 ,0, ],
+                [0 ,50,49,1 ,0, ],
+                [0 ,0 ,60,40,0, ],
+                [0 ,0 ,0 ,99,1, ],
+                [0 ,0 ,0 ,0 ,100],
+            ],
+            high:[
+                [30,62,7 ,1 ,0  ],
+                [0 ,30,62,7 ,1  ],
+                [0 ,0 ,59,40,1  ],
+                [0 ,0 ,0 ,80,15 ],
+                [0 ,0 ,0 ,0 ,100 ],
+            ],
+        }
+    }
+    function ArrayLot(list){
+        var sum = list.reduce((a,b)=>a+b);
+        var r = rand(sum);
+        return list.findIndex(n=>{
+            return (r-=n) < 0;
+        })
+    }
+
+    const voltageElements = [...$('.colorBar')].map($);
+
+    async function upVoltage(from,to){
+
+        while(from < to){
+            voltageElements[from].addClass('show');
+            await sounder.playSound('voltageup')
+            from++;
+        }
+    }
+
+    function voltageReset(){
+        $('.colorBar').removeClass('show');
+    }
+
+    async function bonusKokuti(isGet){
+        if(isEffected) return;
+        isEffected = true;
+        var typewritter = false;
+        $('#renda').removeClass('show');
+        $('#geki').removeClass('show');
+        $('#itigeki').removeClass('show');
+        if(!rand(32) && isGet){
+            typewritter = true;
+            isGet = false;
+            slotmodule.once('reelstop',()=>{
+                slotmodule.freeze();
+                Typewriter("ボーナス確定!!",{
+                    speed:150,
+                    delay:5000,
+                }).change((t)=>{
+                    t!="\n"&&sounder.playSound('type');
+                }).title(()=>{
+                    sounder.playSound('title');
+                }).finish((e)=>{
+                    e.parentNode.removeChild(e);
+                    setTimeout(()=>{
+                        $('#disk').addClass('show');
+                        slotmodule.resume();
+                    },1000)
+                });
+            })
+        }
+        if(isGet){
+            $('#disk').addClass('show');
+            await sounder.playSound('win');
+        }else{
+            $('#disk').removeClass('show');
+            await sounder.playSound('lose');
+        }
+        slotmodule.resume();
+    }
+
+    async function leverChance(isGet){
+        const typeTable = {true:[20,80],false:[80,20]}[isGet];
+        var downEvent;
+        var fn;
+        const gekiFlag = !!ArrayLot({true:[95,5],false:[99,1]}[isGet]);
+        window.addEventListener('keydown',downEvent = (e)=>{
+            if(fn && e.keyCode == 32){
+                fn();
+            }
+        })
+        window.addEventListener('touchstart',downEvent);
+        const $disk = $('#disk');
+        slotmodule.freeze();
+        if(gekiFlag){
+            sounder.playSound('geki');
+            $('#geki').addClass('show')
+        }
+        await sounder.playSound('leverstart');
+        if(ArrayLot(typeTable) == 0){
+            $('#renda').addClass('show');
+            var pushCount = isGet ? 1 + rand(15) : -1;
+            fn = async ()=>{
+                pushCount--;
+                sounder.playSound('leverpush');
+                if(!$disk.hasClass('show')){
+                    $disk.addClass('show');
+                    setTimeout(()=>{
+                        if(!isEffected) $disk.removeClass('show');
+                    },100)
+                }
+                if(pushCount != 0) return;
+                window.removeEventListener('keydown',downEvent);
+                window.removeEventListener('touchstart',downEvent);
+                await bonusKokuti(isGet);
+            }
+            if(!isEffected){
+                setTimeout(async ()=>{
+                    window.removeEventListener('keydown',downEvent);
+                    window.removeEventListener('touchstart',downEvent);
+                    await bonusKokuti(isGet);
+                },3000)
+            }
+        }else{
+            $('#itigeki').addClass('show');
+            fn = async ()=>{
+                sounder.playSound('leverpush')
+                window.removeEventListener('keydown',downEvent);
+                window.removeEventListener('touchstart',downEvent);
+                await bonusKokuti(isGet);
+            }
+        }
+    }
+
+    var voltageIndex;
+    var isEffected = false;
+    async function effect(lot) {
         switch (gameMode) {
             case 'normal':
-                var effectReserve = null;
-                switch (lot) {
-                    case 'はずれ':
-                        if (!rand(128)) {
-                            effectReserve = {
-                                color: null,
-                                sound: 'low'
-                            }
-                            if (!rand(4)) {
-                                effectReserve.sound = 'high'
+                switch(slotmodule.playControlData.betcoin){
+                    case 3:
+                        if(!isEffected){
+                            await leverChance(bonusFlag == 'BIG1');
+                        }
+                    break
+                    case 2:
+                        var voltageMode = bonusFlag == 'BIG1' ? 'high' : 'low';
+                        var next;
+                        if(lot == 'リプレイ'){
+                            next = ArrayLot(VoltageMap.CZ[voltageMode][voltageIndex]);
+                        }else{
+                            next = voltageIndex;
+                            for(var i = 0; i < 3;i ++){
+                                next = ArrayLot(VoltageMap.CZ[voltageMode][next]);
                             }
                         }
-                        break
-                    case 'リプレイ':
-                        if (!rand(6)) {
-                            effectReserve = {
-                                color: 'blue',
-                                sound: 'low'
+                        slotmodule.once('bet',async ()=>{
+                            slotmodule.freeze();
+                            await upVoltage(voltageIndex,next);
+                            voltageIndex = next;
+                            if(lot == 'リプレイ'){
+                                return slotmodule.resume();
                             }
-                            if (!rand(4)) {
-                                effectReserve.sound = 'high'
-                            }
-                        }
-                        if (bonusFlag) {
-                            if (rand(3)) {
-                                effectReserve = {
-                                    color: 'red',
-                                    sound: 'low'
-                                }
-                                if (!rand(2)) {
-                                    effectReserve.sound = 'high'
-                                }
-                            }
-                        }
-                        break
-                    case 'ベル':
-                        if (!rand(6)) {
-                            effectReserve = {
-                                color: 'yellow',
-                                sound: 'low'
-                            }
-                            if (!rand(4)) {
-                                effectReserve.sound = 'high'
-                            }
-                        }
-                        if (bonusFlag) {
-                            if (rand(3)) {
-                                effectReserve = {
-                                    color: 'green',
-                                    sound: 'low'
-                                }
-                                if (!rand(2)) {
-                                    effectReserve.sound = 'high'
-                                }
-                            }
-                        }
-                        break
-                    case 'スイカ':
-                        effectReserve = {
-                            color: 'green',
-                            sound: 'low'
-                        }
-                        if (!rand(4)) {
-                            effectReserve.sound = 'high'
-                        }
-                        break
-                    case 'チェリー':
-                        if (!rand(10)) {
-                            effectReserve = {
-                                color: 'red',
-                                sound: 'low'
-                            }
-                            if (!rand(64)) {
-                                effectReserve.sound = 'high'
-                            }
-                        }
-                        if (bonusFlag&& rand(2)) {
-                            effectReserve = {
-                                color: 'red',
-                                sound: ['low', 'high'][rand(2)]
-                            }
-                        }
-                        break
-                    case 'BIG1':
-                        if (!rand(3)) {
-                            effectReserve = {
-                                color: null,
-                                sound: 'low'
-                            }
-                            if (!rand(3)) {
-                                effectReserve.sound = 'high'
-                            }
-                        }
-                        break;
-                    case 'BIG2':
-                        if (rand(3)) {
-                            var efTable = [10, 10, 0, 0, 10, 15, 25, 30, 0, 0]
-                            var r = rand(100);
-                            var e = efTable.findIndex(f => {
-                                r -= f;
-                                return r < 0
-                            });
-                            effectReserve = {
-                                color: [null, 'blue', 'yellow', 'green', 'red'][parseInt(e / 2)],
-                                sound: ['low', 'high'][e % 2]
-                            }
-                        }
-                        break;
-                    case 'BIG3':
-                        if (rand(3)) {
-                            var efTable = [10, 10, 0, 0, 25, 30, 10, 15, 0, 0]
-                            var r = rand(100);
-                            var e = efTable.findIndex(f => {
-                                r -= f;
-                                return r < 0
-                            });
-                            effectReserve = {
-                                color: [null, 'blue', 'yellow', 'green', 'red'][parseInt(e / 2)],
-                                sound: ['low', 'high'][e % 2]
-                            }
-                        }
-                        break
-                    case 'BIG4':
-                        if (rand(3)) {
-                            var efTable = [10, 10, 10, 30, 0, 0, 0, 0, 10, 30]
-                            var r = rand(100);
-                            var e = efTable.findIndex(f => {
-                                r -= f;
-                                return r < 0
-                            });
-                            effectReserve = {
-                                color: [null, 'blue', 'yellow', 'green', 'red'][parseInt(e / 2)],
-                                sound: ['low', 'high'][e % 2]
-                            }
-                        }
-                        break
-                }
-                if (effectReserve) {
-                    sounder.playSound('yokoku_' + effectReserve.sound);
-                    var img = effectReserve.color;
-                    if (!img) {
-                        setLampColor('#moon', 'moon');
-                    } else {
-                        setLampColor('#moon', 'moon_' + img);
-                    }
-                    slotmodule.once('allreelstop', () => {
-                        setLampColor('#moon', 'moon');
-                    })
+                            sounder.stopSound('bgm')
+                            return slotmodule.resume();
+                        })
+                    break
                 }
                 break
-            case 'big':
-            case 'jac':
-                if (sbig) {
-                    sounder.playSound('nabi')
-                    for (var i = 1; i <= 3; i++) {
-                        if (i == lot.slice(-1)) {
-                            setLampBrightness('#nabi' + i, 100)
-                        } else {
-                            setLampBrightness('#nabi' + i, 20)
-                        }
-                    }
-                    slotmodule.once('bet', () => {
-                        for (var i = 1; i <= 3; i++) {
-                            setLampBrightness('#nabi' + i, 20)
-                        }
-                    })
+            case 'REG1':
+                voltageIndex = 0;
+                voltageReset();
+                if(!/DJリプレイ/.test(lot)){
+
+                }else{
+
                 }
-                break
         }
     }
     $(window).bind("unload", function() {
@@ -950,4 +972,10 @@ function segInit(selector, size) {
     sc.setOnColor(230, 0, 0)
     sc.reset();
     return sc;
+}
+
+function delay(ms){
+    return new Promise(r=>{
+        setTimeout(r,ms);
+    })
 }

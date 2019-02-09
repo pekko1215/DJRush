@@ -23,6 +23,7 @@ var control = {
 		"JACGAME",
 		"REG2",
 		"JACIN2",
+		"JACGAME2"
 		],
 	maxpay:[15,15,15]
 }

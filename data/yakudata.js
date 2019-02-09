@@ -101,9 +101,9 @@ var YakuData = [
         flashLine:dummnyLines["なし"]
     },
     {
-        name: "REG1",
-        pay: [0, 0, 0],
-        flashLine:dummnyLines["なし"]
+        name: "JACチェリー",
+        pay: [3, 3, 3],
+        flashLine:[[1,0,0],[0,0,0],[0,0,0]]
     },
     {
         name: "DJリプレイ",
@@ -153,40 +153,48 @@ var YakuData = [
         flashLine:dummnyLines["右上がり"]
     },
     {
-        name: "REG2",
+        name: "DJリプレイ",
         pay: [0, 0, 0],
         flashLine:dummnyLines["下段"]
     },
     {
         name:"JACIN2",
         pay:[0 , 0, 0],
+        flashLine:[[0,0,0],[0,1,1],[1,0,0]]
     },
     {
         name:"JACIN2",
         pay:[0 , 0, 0],
+        flashLine:[[0,0,0],[0,0,1],[0,0,0]]
     },
     {
         name:"JACIN2",
         pay:[0 , 0, 0],
+        flashLine:[[0,0,0],[0,1,0],[1,0,1]]
     },
     {
         name:"JACIN2",
         pay:[0 , 0, 0],
+        flashLine:[[0,0,1],[0,0,0],[1,1,0]]
     },
     {
         name:"REG1",
         pay:[0 , 0, 0],
+        flashLine:[[0,0,0],[0,1,0],[1,0,1]]
     },
     {
         name:"REG1",
         pay:[0 , 0, 0],
+        flashLine:[[0,0,1],[0,0,0],[1,1,0]]
     },
     {
         name:"REG1",
         pay:[0 , 0, 0],
+        flashLine:[[0,0,0],[0,1,1],[1,0,0]]
     },
     {
         name:"REG1",
         pay:[0 , 0, 0],
+        flashLine:[[0,0,0],[0,0,1],[0,0,0]]
     }
 ]
