@@ -11,7 +11,9 @@ function main() {
     var hyperzone = 0;
     var hypergame = 0;
     var lastPay = 0;
-    slotmodule.on("allreelstop", function(e) {
+    var renCount = 0;
+    var lastBonusCount = 0;
+    slotmodule.on("allreelstop",async function(e) {
         if (e.hits != 0) {
             if (e.hityaku.length == 0) return
             var matrix = e.hityaku[0].flashLine || e.hityaku[0].matrix;
@@ -46,6 +48,12 @@ function main() {
                         }
                     })
                     break
+                case 'BIG1':
+                    slotmodule.setFlash(null, 0, function(e) {
+                        slotmodule.setFlash(flashdata.default, 3)
+                        slotmodule.setFlash(replaceMatrix(flashdata.syoto, matrix, colordata.RED_B, null), 3, arguments.callee)
+                    })
+                break
                 case 'JACIN2':
                 case 'REG1':
                 case 'JACIN':
@@ -63,8 +71,9 @@ function main() {
         replayFlag = false;
         var nexter = true;
         var changeBonusFlag = false;
-        e.hityaku.forEach(function(d) {
-            var matrix = d.matrix;
+        for(var i=0;i < e.hityaku.length;i++){
+            var d = e.hityaku[i];
+            // var matrix = d.matrix;
             switch (gameMode) {
                 case 'normal':
                     switch (d.name) {
@@ -72,8 +81,24 @@ function main() {
                             replayFlag = true;
                             break
                         case "BIG1":
+                            renCount++;
                             bonusFlag = null;
                             setGamemode('BIG1');
+                            var t = 4000/(310 - lastBonusCount);
+                            if(renCount == 1) lastBonusCount = 0;
+                            var countUpFn;
+                            var count = lastBonusCount;
+                            setTimeout(countUpFn = ()=>{
+                                segments.effectseg.setSegments(''+count);
+                                count++;
+                                if(count != 311) setTimeout(countUpFn,t);
+                            },t);
+                            if(renCount == 1){
+                                lastBonusCount = 0;
+                                await sounder.playSound('fan1');
+                            }else{
+                                await sounder.playSound('fan2');
+                            }
                             sounder.playSound("big1",true,()=>{},14.276);
                             bonusData = new BonusData.BigBonus5("BIG1",310);
                             isEffected = false;
@@ -82,6 +107,7 @@ function main() {
                             break
                         case "BIG2":
                             setGamemode('BIG2');
+                            renCount = 0;
                             bonusData = new BonusData.BigBonus5("BIG2",300);
                             bonusFlag = null;
                             isEffected = false;
@@ -103,15 +129,21 @@ function main() {
                             setGamemode('JAC');
                             bonusData.jacIn('JAC',6,6);
                             bonusFlag = null;
+                            sounder.playSound('hitchance')
                         break
                         case 'リプレイ':
                             replayFlag = true;
                         break
                         case 'REG2':
+                            lastBonusCount = bonusData.maxPay - bonusData.payd;
                             setGamemode('REG2');
                             bonusData = new BonusData.RegularBonus5("REG2",1,1);
                             bonusFlag = null;
-                            sounder.playSound('hitchance')
+                            sounder.stopSound('bgm');
+                            sounder.playSound('win');
+                            $('#disk').addClass('show');
+                            $('#geki').removeClass('show');
+                            isEffected = true;
                     }
                     break;
                 case 'BIG2': //見た目通常
@@ -130,8 +162,10 @@ function main() {
                             setGamemode('REG2');
                             bonusData = new BonusData.RegularBonus5('REG2',1,1);
                             bonusFlag = null;
-                            sounder.playSound('chance');
-                            sounder.playSound('hitchance')
+                            sounder.playSound('win');
+                            $('#disk').addClass('show');
+                            $('#geki').removeClass('show');
+                            isEffected = true;
                             break
                         case 'JACIN2':
                             setGamemode('JAC2');
@@ -159,7 +193,7 @@ function main() {
                             break
                     }
             }
-        })
+        }
 
         if (nexter) {
             e.stopend()
@@ -170,10 +204,10 @@ function main() {
         setGamemode("normal")
     });
     slotmodule.on("payend", function(e) {
-        console.log(e)
+        // console.log(e)
         if (gameMode != "normal") {
             bonusData.onNextGame(e.pay)
-            console.log(bonusData,e.pay,bonusData.getGameMode())
+            // console.log(bonusData,e.pay,bonusData.getGameMode())
             setGamemode(bonusData.getGameMode());
             if(bonusData.isEnd == true && bonusData.name == 'BIG1'){
                 sounder.stopSound("bgm");
@@ -310,7 +344,7 @@ function main() {
                             case 6:
                             case 5:
                             case 4:
-                                ret = "REG1";
+                                ret = "REG2";
                                 break
                             case 3:
                             case 2:
@@ -388,7 +422,9 @@ function main() {
                     ret = "リプレイ";
                     if(!rand(8)){
                         ret = 'ベル';
-                        bonusFlag = bonusFlag || 'BIG2';
+                        if(!bonusFlag){
+                            bonusFlag = !rand(4) ? 'BIG1' : 'BIG2';
+                        }
                     }else{
                         if(bonusFlag == null && !rand(12)){
                             bonusFlag = 'BIG1'
@@ -568,17 +604,11 @@ function main() {
         SlotCodeOutputer.save(stringifySaveData())
     }
     window.SaveData = function() {
-        if (gameMode != "normal" || isCT) {
-            return false;
-        }
         var savedata = stringifySaveData()
         localStorage.setItem("savedata", JSON.stringify(savedata))
         return true;
     }
     window.LoadData = function() {
-        if (gameMode != "normal" || isCT) {
-            return false;
-        }
         var savedata = localStorage.getItem("savedata")
         try {
             var data = JSON.parse(savedata)
@@ -603,7 +633,7 @@ function main() {
         changeCredit(0)
     }
     function setGamemode(mode) {
-        console.log(`${gameMode} -> ${mode}`)
+        // console.log(`${gameMode} -> ${mode}`)
         switch (mode) {
             case 'normal':
                 gameMode = 'normal'
@@ -676,58 +706,10 @@ function main() {
         if(!this.bonusData) return segments.effectseg.setSegments("");
         if(this.bonusData instanceof BonusData.RegularBonus5) return;
         segments.effectseg.setSegments(bonusData.getBonusSeg());
-    }
-
-    function changeCTGameSeg() {
-        segments.effectseg.setOnColor(230, 0, 0);
-        segments.effectseg.setSegments(ctdata.ctgame);
-    }
-
-    function changeCTCoinSeg() {
-        segments.effectseg.setOnColor(50, 100, 50);
-        segments.effectseg.setSegments(200 + ctdata.ctstartcoin - coin);
-    }
-    var LampInterval = {
-        right: -1,
-        left: -1,
-        counter: {
-            right: true,
-            left: false
+        if(bonusData.isJacin){
+            segments.payseg.setSegments(""+bonusData.payCount)
         }
     }
-
-    function setLamp(Flags, timer) {
-        Flags.forEach(function(f, i) {
-            if (!f) {
-                return
-            }
-            LampInterval[["left", "right"][i]] = setInterval(function() {
-                if (LampInterval.counter[["left", "right"][i]]) {
-                    $("#" + ["left", "right"][i] + "neko").css({
-                        filter: "brightness(200%)"
-                    })
-                } else {
-                    $("#" + ["left", "right"][i] + "neko").css({
-                        filter: "brightness(100%)"
-                    })
-                }
-                LampInterval.counter[["left", "right"][i]] = !LampInterval.counter[["left", "right"][i]];
-            }, timer)
-        })
-    }
-
-    function setLampBrightness(selector, parsent) {
-        $(selector).css({
-            filter: `brightness(${parsent}%)`
-        })
-    }
-
-    function setLampColor(selector, color) {
-        $(selector).attr({
-            src: `img/lamp/` + color + '.png'
-        })
-    }
-
     const VoltageMap = {
         CZ:{
             low:[
@@ -744,6 +726,17 @@ function main() {
                 [0 ,0 ,0 ,80,15 ],
                 [0 ,0 ,0 ,0 ,100 ],
             ],
+        },
+        normal:{
+            'はずれ':     [979,20,1  ,0,0],
+            'リプレイ':     [68 ,30,2 ,0,0],
+            'ベル':       [ 20, 0,70,10,0],
+            'チェリー':     [ 20, 0,70,10,0],
+            'チャンス目1':  [ 10, 5, 1,70,14],
+            'チャンス目2':  [ 5 , 5, 1,60,29],
+            'JACIN2':     [15 , 1,60,20, 4],
+            'REG1':      [15 , 1,30,40,14],
+            'REG2':      [15 , 1, 0,30,54]
         }
     }
     function ArrayLot(list){
@@ -817,7 +810,7 @@ function main() {
                 fn();
             }
         })
-        window.addEventListener('touchstart',downEvent);
+        $('canvas')[0].addEventListener('touchstart',downEvent);
         const $disk = $('#disk');
         slotmodule.freeze();
         if(gekiFlag){
@@ -839,13 +832,13 @@ function main() {
                 }
                 if(pushCount != 0) return;
                 window.removeEventListener('keydown',downEvent);
-                window.removeEventListener('touchstart',downEvent);
+                $('canvas')[0].removeEventListener('touchstart',downEvent);
                 await bonusKokuti(isGet);
             }
             if(!isEffected){
                 setTimeout(async ()=>{
                     window.removeEventListener('keydown',downEvent);
-                    window.removeEventListener('touchstart',downEvent);
+                    $('canvas')[0].removeEventListener('touchstart',downEvent);
                     await bonusKokuti(isGet);
                 },3000)
             }
@@ -854,7 +847,7 @@ function main() {
             fn = async ()=>{
                 sounder.playSound('leverpush')
                 window.removeEventListener('keydown',downEvent);
-                window.removeEventListener('touchstart',downEvent);
+                $('canvas')[0].removeEventListener('touchstart',downEvent);
                 await bonusKokuti(isGet);
             }
         }
@@ -862,6 +855,7 @@ function main() {
 
     var voltageIndex;
     var isEffected = false;
+    var isGekiLamp;
     async function effect(lot) {
         switch (gameMode) {
             case 'normal':
@@ -898,33 +892,38 @@ function main() {
             case 'REG1':
                 voltageIndex = 0;
                 voltageReset();
-                if(!/DJリプレイ/.test(lot)){
-
-                }else{
-
-                }
+                break
+            case 'BIG2':
+                voltageReset();
+                var vol = ArrayLot(VoltageMap.normal[lot]);
+                if(!vol) break;
+                upVoltage(0,vol);
+                var gekiList = {'JACIN':[1,99],'REG1':[2,99],'REG2':[50,50]}[lot];
+                if(!gekiList) break;
+                if(ArrayLot(gekiList)) return
+                sounder.playSound('geki');
+                $('#geki').addClass('show');
+                break
+            case 'BIG1':
+                if(!bonusFlag || isGekiLamp) return;
+                var gekiFlag = !rand({
+                    true:16,
+                    false:200
+                }[bonusFlag == 'REG2']);
+                if(!gekiFlag) return;
+                isGekiLamp = true;
+                sounder.playSound('geki');
+                $('#geki').addClass('show');
+                break
+            case 'JAC':
+                isEffected = false;
+                $('#geki').removeClass('show');
         }
     }
     $(window).bind("unload", function() {
         SaveData();
     });
     LoadData();
-    setInterval(function lanpAnimation() {
-        switch (hyperzone) {
-            case 0:
-                setLampBrightness('#fire', 20);
-                break
-            case 1:
-                setLampBrightness('#fire', rand(20, 40));
-                break
-            case 2:
-                setLampBrightness('#fire', rand(20, 60));
-                break
-            case 3:
-                setLampBrightness('#fire', rand(20, 80));
-                break
-        }
-    }, 500)
 }
 
 function and() {

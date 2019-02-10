@@ -34,7 +34,8 @@ const BonusData = {
 			}
 		}
 		getBonusSeg(){
-			return ""+(this.maxPay - this.payd)
+			var tmp = this.maxPay - this.payd
+			return ""+(tmp < 0 ? 0 : tmp);
 		}
 	},
 	RegularBonus5:class {
