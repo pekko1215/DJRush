@@ -706,7 +706,7 @@ function main() {
         if(!this.bonusData) return segments.effectseg.setSegments("");
         if(this.bonusData instanceof BonusData.RegularBonus5) return;
         segments.effectseg.setSegments(bonusData.getBonusSeg());
-        if(bonusData.isJacin){
+        if(bonusData.isJacin&&bonusData.jacName == 'JAC'){
             segments.payseg.setSegments(""+bonusData.payCount)
         }
     }
