@@ -806,7 +806,7 @@ function main() {
         var fn;
         const gekiFlag = !!ArrayLot({true:[95,5],false:[99,1]}[isGet]);
         window.addEventListener('keydown',downEvent = (e)=>{
-            if(fn && e.keyCode == 32){
+            if(fn){
                 fn();
             }
         })
